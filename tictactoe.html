@@ -39,7 +39,7 @@
 				width: 75%;
 				border-left: 1px solid #ddd;
 				border-right: 1px solid #ddd;
-				box-shadow:0 0 35px #ccc;
+				box-shadow:0 0 25px #ddd;
 				min-height: 100vh;
 				clear: both;
 				padding: 10px;
@@ -96,6 +96,7 @@
 				font-weight: 600;
 				vertical-align: middle;
 				cursor: pointer;
+				display: inline-block;
 			}
 			.warning {
 				font-size: 20px;
@@ -106,7 +107,6 @@
 			}
 			a#reset {
 				transition: all 0.5s ease;
-				display: inline-block;
 				border: 1px solid #ddd;
 				background-color: #eee;
 				box-shadow: 
@@ -116,7 +116,7 @@
 				padding: 10px;
 				border-radius: 50vh;
 				font-size: 20px;
-				/*display: none; */
+				display: none;
 			}
 			a#reset:hover, a#reset:focus {
 				box-shadow: 
@@ -125,6 +125,9 @@
 					0 0 16px #eee,
 					0 2px 4px #888;
 					cursor: pointer;
+			}
+			p#chosen {
+				display: none;
 			}
 		</style>
 	</head>
@@ -140,8 +143,9 @@
 			</noscript>
 			<div id="board">
 				<p id="choice">Choose: <span class="mark">X</span> or <span class="mark">O</span></p>
+				<p id="chosen">You chose: <span class="mark">X</span> You get to make the first move.</p>
 				<table>
-					<tr id="row1"><td tabindex="1" id="1"></td><td tabindex="2" id="2"></td><td></td></tr>
+					<tr id="row1"><td></td><td></td><td></td></tr>
 					<tr id="row2"><td></td><td></td><td></td></tr>
 					<tr id="row3"><td></td><td></td><td></td></tr>
 				</table>
@@ -159,8 +163,26 @@
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
 		<script type="text/javascript">
 			$(document).ready(function(){
-					$(".mark").on("click keypress", function() {
-							console.log($(this).index());
+					// Initialize player choice
+					var pMark = "";
+					// Initialize board
+					// Give player ability to choose "X" or "O"
+					function returnNum(num) {
+						console.log(num);
+						return num;
+					}
+					$("#choice span.mark")
+						.attr({
+							role: "button",
+							tabindex: function(i){ return i + 1}})
+						.on("click keypress", function(e) {
+							if (e.type == "click" || (e.type == "keypress" && (e.which == 13 || e.which == 32))) {
+								pMark = $(this).text();
+								$("#chosen span.mark").html(pMark);
+								$("#choice").fadeOut(250, function() {;
+									$("#chosen").fadeIn(250);
+								});
+							}
 						});
 			});
 		</script>
