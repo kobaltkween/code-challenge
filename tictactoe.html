@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<!--
+   Here is my response to your coding challenge.  
+   Thanks so much for the opportunity.  
+   I decided to make this in just HTML/CSS/JS, because it seemed like 
+   a purely client side problem.  
+   
+   I see you support IE going pretty far back on Rare.us.  Which makes 
+   sense for such a high traffic site.  I figure that fits your traffic 
+   data. But since 
+			* IE is now only supported in the latest version for the platform
+			* Windows 7 and higher are the bulk of Windows OS's
+			* Firefox and Chrome both push updates pretty regularly and heavily
+			* Apple seems to do the same with Safari
+			
+	I'm going to stick with IE10+ and modern browser solutions for this 
+	limited audience.
+-->
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Tic Tac Toe Coding Challenge</title>
+		<link href="https://fonts.googleapis.com/css?family=Lora:400,400italic" rel="stylesheet" type="text/css">
+		<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,600italic' rel="stylesheet" type="text/css">
+		<style>
+			* {
+					box-sizing: border-box;
+				}
+			html {
+				background-color: #ddd;
+			}
+			body {
+				background-color: white;
+				color: black;
+				margin: 0 auto;
+				max-width: 800px;
+				min-width: 420px;
+				width: 75%;
+				border-left: 1px solid #bbb;
+				border-right: 1px solid #bbb;
+				box-shadow:0 0 25px #999;
+				min-height: 100vh;
+				clear: both;
+				padding: 10px;
+			}
+			body, p, ul, ol, td {
+				font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+				margin-top: 0;
+				padding-top: 0;
+			}
+			h1, h2, h3 {
+				font-family: Lora, Georgia, Times, serif;
+				font-weight:  normal;
+				margin-top: 0;
+			}
+			h1 {
+				font-size: 48px;
+				text-align: center;
+				margin-bottom: 25px;
+				padding-top: 15px;
+			}
+			table {
+				border-collapse: collapse;
+			}
+			#board, #instructions {
+				position: relative;
+				float: left;
+				margin: 1%;
+				padding: 1%;
+				width: 48%;
+			}
+			#board table {
+				height: 300px;
+				width: 300px;
+				margin: 20px;
+			}
+			#board table td {
+				height: 100px;
+				width: 100px;
+				text-align: center;
+				vertical-align: center;
+			}
+			table tr#row2 {
+				border-top: 1px solid #444;
+				border-bottom: 1px solid #444;
+			}
+			table tr td:nth-child(2){
+				border-right: 1px solid #444;
+				border-left: 1px solid #444;
+			}
+			.mark {
+				font-size: 30px;
+				margin: 10px;
+				font-family: Lora;
+				font-weight: 600;
+				vertical-align: middle;
+				cursor: pointer;
+			}
+			.warning {
+					font-size: 20px;
+					font-weight: 600;
+				}
+			a#reset {
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header>
+			<h1>TicTacToe Coding Challenge</h1>
+		</header>
+		<main>
+			<noscript>
+				<p class="warning">Sorry! This game won't work unless you turn on JavaScript.  
+				Please change your browser or plugin settings to allow this script to run.</p>
+			</noscript>
+			<div id="board">
+				<p id="choice">Choose: <span class="mark">X</span> or <span class="mark">O</span></p>
+				<table>
+					<tr id="row1"><td tabindex="1" id="1"></td><td tabindex="2" id="2"></td><td></td></tr>
+					<tr id="row2"><td></td><td></td><td></td></tr>
+					<tr id="row3"><td></td><td></td><td></td></tr>
+				</table>
+				<a id="reset">Reset Game</a>
+			</div>
+			<div id="instructions">
+				<h2>Instructions</h2>
+				<ol>
+					<li>Click or tab and select "X" or "O".</li>
+					<li>Click or tab and select the empty square you want to use.</li>
+					<li>Play until you or the computer win.</li>
+				</ol>
+			</div>
+		</main>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+					$(".mark").on("click keypress", function() {
+							console.log("clicked");
+						});
+			});
+		</script>
+	</body>
+
+</html>
