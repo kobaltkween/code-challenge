@@ -10,10 +10,20 @@
 		<title>Testing</title>
 		<link href="https://fonts.googleapis.com/css?family=Lora:400,400italic" rel="stylesheet" type="text/css">
 		<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,600italic' rel="stylesheet" type="text/css">
+		<style>
+			p#test {
+				font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+				transition: all 1s ease;
+				font-size: 20px;
+				padding: 20px;
+				color: white;
+				background-color: orange;
+			}
+		</style>
 	</head>
 
 	<body>
-	
+	<p id="test">Testing testing testing!</p>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
 	<script>
 			// Test what's in an empty array
@@ -30,8 +40,18 @@
 			var i = j = 0;
 			i++;
 			//console.log("i is " + i + " and j is " + j);
-			var test = (testArray.indexOf(22) !== -1) ? "found it" : "didn't find it"
+			var test = (testArray.indexOf(22) !== -1) ? "found it" : "didn't find it";
 			console.log(test);
+			(function($) {
+				$("p#test").on("click", function() {
+					$(this).css({
+						"background-color": "cyan", 
+						padding: "30px", 
+						"font-size": "30px",
+						"box-shadow": "0 0 15px #eee, 0 3px 4px #ddd"
+					});
+				});
+			}(jQuery));
 	</script>
 	</body>
 

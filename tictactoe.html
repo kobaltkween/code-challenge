@@ -80,7 +80,7 @@
 				width: 100px;
 				text-align: center;
 				vertical-align: center;
-				font-size: 36px;
+				font-size: 48px;
 				font-family: Lora, Georgia, Times, serif;
 			}
 			#board table tr#row2 {
@@ -198,7 +198,8 @@
 				
 				function win(marked) {
 					console.log("Win function called!");
-					// Mark the winning boxes
+					for (var i; i < marked.length; i++) {
+						$("#board table tr td").eq(marked - 1).
 					// Make the reset button visible
 					// Give the reset button the ability to reset the game
 				}
