@@ -91,12 +91,15 @@
 			}
 			.mark {
 				font-size: 30px;
-				margin: 10px;
+				padding: 10px;
 				font-family: Lora;
 				font-weight: 600;
 				vertical-align: middle;
 				cursor: pointer;
 				display: inline-block;
+			}
+			.mark:focus, #board table tr td:focus {
+				background-color: #eee;
 			}
 			.warning {
 				font-size: 20px;
@@ -215,41 +218,50 @@
 										})
 										.on("click keypress", function(e) {
 											if (e.type === "click" || (e.type === "keypress" 
-													&& (e.which === 13 || e.which === 32))) {
+													&& (e.which === 13 || e.which === 32) && $(this).text() === "")) {
 												// When chosen
-												console.log("Chose cell " + $(this).prop("tabindex"));
 												// Add player's mark
+												$(this).text(pMark);
 												// Change the board
-												// Test for win or finished
+												board[$(this).prop("tabindex") - 1] = pMark;
+												console.log(board);
+												// Test and change wins for win or finished
 												// Calculate best move
 												// Add computer's mark
 												// Test for win
+												// Remove events
+												$(this).off("click");
 											} else if (e.type === "keypress") {
-												console.log("Key was pressed");
-												console.log("Key code: " + e.keyCode);
-												console.log("Which: " + e.which);
 												// NOTE: which registered 0 for all arrow keys
 												// Need to use keyCode for all of them
 												if (e.keyCode === 37) {
-													console.log("Pressed left arrow");
 													// If press left arrow
-													// See if it's in the left-most column
-													// If not, change focus to next cell - 1
+													// See if it's in the left most column
+													if (wins[3].indexOf($(this).prop("tabindex")) === -1) {
+														// If not, change focus to cell - 1	 
+														$("#board table tr td").eq($(this).prop("tabindex") - 2).focus();
+													}
 												} else if (e.keyCode === 38) {
-													console.log("Pressed up arrow");
 													// If press up arrow
-													// See if it's in the bottom row
-													// If not, change focus to cell - 3
+													// See if it's in the top row
+													if (wins[0].indexOf($(this).prop("tabindex")) === -1) {
+														// If not, change focus to cell - 3
+														$("#board table tr td").eq($(this).prop("tabindex") - 4).focus();
+													}
 												} else if (e.keyCode === 39) {
-													console.log("Pressed right arrow");
 													// if press right arrow
 													// See if we're in the right-most column
-													// If not, change focus to cell + 1
+													if (wins[5].indexOf($(this).prop("tabindex")) === -1) {
+														// If not, change focus to cell + 1
+														$("#board table td").eq($(this).prop("tabindex")).focus();
+													}
 												} else if (e.keyCode === 40) {
-													console.log("Pressed down arrow")
 													// If press down arrow
-													// See if we're in the left-most column
-													// If not, change focus to cell + 3
+													// See if we're in the bottom column
+													if (wins[2].indexOf($(this).prop("tabindex")) === -1) {
+														// If not, change focus to cell + 3
+														$("#board table td").eq($(this).prop("tabindex") + 2).focus();
+													}
 												} else if (!isNaN(String.fromCharCode(e.which))) {
 													// The numbers are all keyCode 0
 													// Need to use which for them
@@ -257,9 +269,7 @@
 													if (num == 0) {
 														num = 1;
 													}
-													console.log("Pressed number " + num);
-													// If choose a number
-													// If number is 0, set it to 1
+													$("#board table td").eq(num -1).focus();
 													// Move the focus to cell number 
 												}
 											}
