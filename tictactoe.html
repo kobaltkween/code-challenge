@@ -162,29 +162,113 @@
 		</main>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
 		<script type="text/javascript">
-			$(document).ready(function(){
-					// Initialize player choice
-					var pMark = "";
-					// Initialize board
-					// Give player ability to choose "X" or "O"
-					function returnNum(num) {
-						console.log(num);
-						return num;
+			(function($) {
+				// Initialize player choice
+				var pMark = cMark = "";
+				
+				var wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
+							[3,6,9], [1,5,9], [3,5,7]];
+				var board = Array(9);
+				// Function returns false if new mark won game
+				// False if it hasn't
+				function score(mark, place) {
+					oMark = (mark === "X") ? "O" : "X";
+					for (i = 0; i < wins.length; i++) {
+						if (wins[i] !== null && wins[i].inArray(place) !== -1) {
+							if (wins[i].indexOf(oMark) !== -1) {
+									wins[i] = null; 
+							} else {
+								markCount = 1;
+								for (j = 0; j < wins[i].length; j++) {
+									if (wins[i][j] === mark) {
+										markCount++;
+									}
+								}
+								if (markCount === 3) {
+									return false;
+								}
+							}	
+						}
 					}
-					$("#choice span.mark")
-						.attr({
-							role: "button",
-							tabindex: function(i){ return i + 1}})
-						.on("click keypress", function(e) {
-							if (e.type == "click" || (e.type == "keypress" && (e.which == 13 || e.which == 32))) {
-								pMark = $(this).text();
-								$("#chosen span.mark").html(pMark);
-								$("#choice").fadeOut(250, function() {;
-									$("#chosen").fadeIn(250);
+					return true;
+				}
+				
+				// Give player ability to choose "X" or "O"
+				$("#choice span.mark")
+					.attr({
+						role: "button",
+						tabindex: function(i){ return i + 1}})
+					.on("click keypress", function(e) {
+						if (e.type === "click" || (e.type === "keypress" 
+									&& (e.which === 13 || e.which === 32))) {
+							pMark = $(this).text();
+							cMark = (pMark === "X") ? "O" : "X";
+							$("#chosen span.mark").html(pMark);
+							$("#choice").fadeOut(250, function() {
+								$("#chosen").fadeIn(250, function() {
+									// Make board's squares clickable
+									$("#board table tr td")
+										.attr({
+											role: "button",
+											tabindex: function(i){ return i + 1},
+											id: function(i){ return i + 1 }
+										})
+										.on("click keypress", function(e) {
+											if (e.type === "click" || (e.type === "keypress" 
+													&& (e.which === 13 || e.which === 32))) {
+												// When chosen
+												console.log("Chose cell " + $(this).prop("tabindex"));
+												// Add player's mark
+												// Change the board
+												// Test for win or finished
+												// Calculate best move
+												// Add computer's mark
+												// Test for win
+											} else if (e.type === "keypress") {
+												console.log("Key was pressed");
+												console.log("Key code: " + e.keyCode);
+												console.log("Which: " + e.which);
+												// NOTE: which registered 0 for all arrow keys
+												// Need to use keyCode for all of them
+												if (e.keyCode === 37) {
+													console.log("Pressed left arrow");
+													// If press left arrow
+													// See if it's in the left-most column
+													// If not, change focus to next cell - 1
+												} else if (e.keyCode === 38) {
+													console.log("Pressed up arrow");
+													// If press up arrow
+													// See if it's in the bottom row
+													// If not, change focus to cell - 3
+												} else if (e.keyCode === 39) {
+													console.log("Pressed right arrow");
+													// if press right arrow
+													// See if we're in the right-most column
+													// If not, change focus to cell + 1
+												} else if (e.keyCode === 40) {
+													console.log("Pressed down arrow")
+													// If press down arrow
+													// See if we're in the left-most column
+													// If not, change focus to cell + 3
+												} else if (!isNaN(String.fromCharCode(e.which))) {
+													// The numbers are all keyCode 0
+													// Need to use which for them
+													var num = String.fromCharCode(e.which);
+													if (num == 0) {
+														num = 1;
+													}
+													console.log("Pressed number " + num);
+													// If choose a number
+													// If number is 0, set it to 1
+													// Move the focus to cell number 
+												}
+											}
+										});
 								});
-							}
-						});
-			});
+							});
+						}
+					});
+				}(jQuery));
 		</script>
 	</body>
 
