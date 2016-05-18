@@ -80,19 +80,21 @@
 				width: 100px;
 				text-align: center;
 				vertical-align: center;
+				font-size: 36px;
+				font-family: Lora, Georgia, Times, serif;
 			}
-			table tr#row2 {
+			#board table tr#row2 {
 				border-top: 1px solid #444;
 				border-bottom: 1px solid #444;
 			}
-			table tr td:nth-child(2){
+			#board table tr td:nth-child(2){
 				border-right: 1px solid #444;
 				border-left: 1px solid #444;
 			}
 			.mark {
 				font-size: 30px;
 				padding: 10px;
-				font-family: Lora;
+				font-family: Lora, Georgia, Times, serif;
 				font-weight: 600;
 				vertical-align: middle;
 				cursor: pointer;
@@ -132,6 +134,15 @@
 			p#chosen {
 				display: none;
 			}
+			#board p.warning {
+				/*display: none;*/
+				font-size: 20px;
+				background-color: orange;
+				color: white;
+				padding: 10px;
+				border-radius: 10px;
+				margin-top: 50px;
+			}
 		</style>
 	</head>
 
@@ -153,6 +164,7 @@
 					<tr id="row3"><td></td><td></td><td></td></tr>
 				</table>
 				<p class="right"><a id="reset">Reset Game</a></p>
+				<p class="warning">Test warning</p>
 			</div>
 			<div id="instructions">
 				<h2>Instructions</h2>
@@ -165,6 +177,7 @@
 		</main>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
 		<script type="text/javascript">
+				
 			(function($) {
 				// Initialize player choice
 				var pMark = cMark = "";
@@ -172,30 +185,62 @@
 				var wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
 							[3,6,9], [1,5,9], [3,5,7]];
 				var board = Array(9);
+				function initBoard() {
+					console.log("Initialize the board.");
+					// Re-initializes values
+					pMark = cMark = "";
+					wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
+							[3,6,9], [1,5,9], [3,5,7]];
+					board = Array(9);
+					// Reset the mark choices
+					// Clear the board and reset its properties
+				}
+				
+				function win(marked) {
+					console.log("Win function called!");
+					// Mark the winning boxes
+					// Make the reset button visible
+					// Give the reset button the ability to reset the game
+				}
+				
 				// Function returns false if new mark won game
 				// False if it hasn't
 				function score(mark, place) {
 					oMark = (mark === "X") ? "O" : "X";
 					for (i = 0; i < wins.length; i++) {
-						if (wins[i] !== null && wins[i].inArray(place) !== -1) {
-							if (wins[i].indexOf(oMark) !== -1) {
-									wins[i] = null; 
-							} else {
-								markCount = 1;
-								for (j = 0; j < wins[i].length; j++) {
-									if (wins[i][j] === mark) {
-										markCount++;
-									}
+						// Select only possible wins
+						if (wins[i] !== null && wins[i].indexOf(place) !== -1) {
+							// Start an array of places with marks
+							markCount = [];
+							for (j = 0; j < wins[i].length; j++) {
+								if (board[wins[i][j] -1] === oMark) {
+									wins[i] = null;
+									break;
+								} else if (board[wins[i][j] - 1] === mark) {
+									// Add to the tally of marks in a win
+									markCount.push(wins[i][j]);
 								}
-								if (markCount === 3) {
-									return false;
-								}
-							}	
+							}
+							if (markCount.length === 3) {
+								// There's been a win; stop playing
+								win(markCount);
+								console.log("That's a win!");
+								return false;
+							}
 						}
 					}
+					// No win yet; keep playing
+					console.log("No win yet.");
 					return true;
 				}
 				
+				function move(mark) {
+					oMark = (mark === "X") ? "O" : "X";
+					// First see if there's a winning move
+					// Then see if there's an opposing win to block
+					// Then see what move has the most winning possibilities
+					// Return the place to mark
+				}
 				// Give player ability to choose "X" or "O"
 				$("#choice span.mark")
 					.attr({
@@ -219,16 +264,27 @@
 										.on("click keypress", function(e) {
 											if (e.type === "click" || (e.type === "keypress" 
 													&& (e.which === 13 || e.which === 32) && $(this).text() === "")) {
-												// When chosen
-												// Add player's mark
+												place = $(this).prop("tabindex");
+												// Add player's mark to the visible board
 												$(this).text(pMark);
-												// Change the board
-												board[$(this).prop("tabindex") - 1] = pMark;
-												console.log(board);
+												// Change the board array
+												if (typeof(board[place - 1]) === "undefined") {
+													board[place - 1] = pMark;
+												} else {
+													// Something has gone very wrong
+													// Alert the player
+												}
 												// Test and change wins for win or finished
-												// Calculate best move
-												// Add computer's mark
-												// Test for win
+												if (score(pMark, place)) {
+													// Calculate best move
+													// Add computer's mark
+													// Test for win
+												} else {
+													
+													// Highlight winning strip
+													// Make reset button visible
+													// Add functionality to reset button
+												}
 												// Remove events
 												$(this).off("click");
 											} else if (e.type === "keypress") {
