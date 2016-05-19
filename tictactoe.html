@@ -34,14 +34,13 @@
 				background-color: white;
 				color: black;
 				margin: 0 auto;
-				max-width: 800px;
+				max-width: 840px;
 				min-width: 420px;
 				width: 75%;
 				border-left: 1px solid #ddd;
 				border-right: 1px solid #ddd;
 				box-shadow:0 0 25px #ddd;
 				min-height: 100vh;
-				clear: both;
 				padding: 10px;
 			}
 			body, p, ul, ol, td {
@@ -69,6 +68,7 @@
 				margin: 1%;
 				padding: 1%;
 				width: 48%;
+				min-width: 380px;
 			}
 			#board table {
 				height: 300px;
@@ -76,6 +76,8 @@
 				margin: 20px;
 			}
 			#board table td {
+				-webkit-transition: color 0.25s, background-color 0.25s;
+				transition: color 0.25s, background-color 0.25s;
 				height: 100px;
 				width: 100px;
 				text-align: center;
@@ -111,14 +113,15 @@
 				text-align: right;
 			}
 			a#reset {
+				-webkit-transition: all 0.5s ease;
 				transition: all 0.5s ease;
 				border: 1px solid #ddd;
 				background-color: #eee;
 				box-shadow: 
-					inset 0 0 10px #fff,
+					inset 0 0 8px #fff,
 					inset 0 0 1px #fff,
 					0 0 2px #ddd;
-				padding: 10px;
+				padding: 10px 20px;
 				border-radius: 50vh;
 				font-size: 20px;
 				display: none;
@@ -129,19 +132,38 @@
 					inset 0 0 4px #fff,
 					0 0 16px #eee,
 					0 2px 4px #888;
-					cursor: pointer;
+				cursor: pointer;
+				outline: 0;
+				text-decoration: underline dotted black;
+			}
+			a#reset:active {
+				box-shadow: 
+					inset 0 0 20px #fff,
+					inset 0 0 4px #fff,
+					0 0 1px #ddd;
+				text-decoration-color: white;
 			}
 			p#chosen {
 				display: none;
 			}
-			#board p.warning {
-				/*display: none;*/
+			#board p.warning, #board p.message {
 				font-size: 20px;
-				background-color: orange;
 				color: white;
 				padding: 10px;
 				border-radius: 10px;
 				margin-top: 50px;
+			}
+			#board p.warning {
+				display: none;
+				background-color: orange;
+			}
+			footer {
+				clear: both;
+				text-align: center;
+				margin-top: 30px;
+				padding: 10px;
+				font-size: 0.85em;
+				font-style: italic;
 			}
 		</style>
 	</head>
@@ -163,8 +185,7 @@
 					<tr id="row2"><td></td><td></td><td></td></tr>
 					<tr id="row3"><td></td><td></td><td></td></tr>
 				</table>
-				<p class="right"><a id="reset">Reset Game</a></p>
-				<p class="warning">Test warning</p>
+				<p class="right"><a id="reset">Play Again</a></p>
 			</div>
 			<div id="instructions">
 				<h2>Instructions</h2>
@@ -173,18 +194,22 @@
 					<li>Click or tab and select the empty square you want to use.</li>
 					<li>Play until you or the computer win.</li>
 				</ol>
-			</div>
+			</div>http://www.w3schools.com/cssref/pr_border-color.asp
 		</main>
+		<footer><p>Made with jQuery.</p></footer>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
-		<script type="text/javascript">
-				
+		<script type="text/javascript">	
 			(function($) {
-				// Initialize player choice
+				var pWinMess = "You won!";
+				var cWinMess = "Sorry, you lost.";
+				// Initialize player mark choice
 				var pMark = cMark = "";
 				
 				var wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
 							[3,6,9], [1,5,9], [3,5,7]];
 				var board = Array(9);
+				
+				// Make a function to initialize game once it's over
 				function initBoard() {
 					console.log("Initialize the board.");
 					// Re-initializes values
@@ -192,21 +217,81 @@
 					wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
 							[3,6,9], [1,5,9], [3,5,7]];
 					board = Array(9);
-					// Reset the mark choices
-					// Clear the board and reset its properties
+					// Get rid of any messages or warnings
+					$("#board .warning, #board .message").remove();
+					// Hide reset and chosen
+					$("#chosen, a#reset").hide();
+					// Bring back choice paragraph
+					$('#choice').show();
+					// Make choices active again
+					$("#choice span.mark")
+						.attr({
+							role: "button",
+							tabindex: function(i){ return i + 1}})
+						.on("click keypress");
+					// Remove board styles
+					$("#board table, #board tr, #board td").removeAttr("style");
+					// Empty out board cells
+					$("#board table tr td").text("");
 				}
 				
-				function win(marked) {
+				// Set up reset button
+				// Give the reset button the ability to reset the game
+				$("a#reset").on("click keypress", function(e) {
+					if (e.type === "click" || (e.type === "keypress" 
+								&& (e.which === 13 || e.which === 32))) {
+						initBoard();
+					}	
+				});
+				
+				function endGame(message) {
+					$("#board table").after(message);
+					// Make the board inactive
+					$("#board table tr td")
+						.off("click keypress")
+						.removeAttr("tabindex")
+						.css({"background-color" : "#ddd", color: "#aaa"});
+					$("#board table tr#row2, #board table tr td:nth-child(2)").css("border-color", "#aaa");
+					// Make the reset button visible and give it focus
+					$("a#reset")
+						.fadeIn(250)
+						.attr({
+							role: "button",
+							tabindex: 1
+						}).focus();
+				}
+				
+				function win(marked, player) {
 					console.log("Win function called!");
-					for (var i; i < marked.length; i++) {
-						$("#board table tr td").eq(marked - 1).
-					// Make the reset button visible
-					// Give the reset button the ability to reset the game
+					// Set up response
+					var mess = (player) ? pWinMess : cWinMess;
+					var message = $("<p />", {"class" : "message"})
+								.css("background-color", col).text(mess);
+					endGame(message);
+					// Mark the winning squares
+					var col = (player) ? "green" : "blue";
+					// Mark the winning squares on the board
+					for (var i = 0; i < marked.length; i++) {
+						$("#board table tr td").eq(marked[i] - 1)
+							.css({
+								color: "white",
+								"background-color": col
+							});
+					}
+				}
+				
+				function noWin() {
+					console.log("No one won.");
+					// Grey out the board
+					var mess = "This game was draw.  Good game!";
+					var message = $("<p />", {"class" : "message"})
+								.css("background-color", "grey").text(mess);
+					endGame(message);
 				}
 				
 				// Function returns false if new mark won game
-				// False if it hasn't
-				function score(mark, place) {
+				// True if it hasn't
+				function score(mark, place, player) {
 					oMark = (mark === "X") ? "O" : "X";
 					for (i = 0; i < wins.length; i++) {
 						// Select only possible wins
@@ -224,7 +309,7 @@
 							}
 							if (markCount.length === 3) {
 								// There's been a win; stop playing
-								win(markCount);
+								win(markCount, player);
 								console.log("That's a win!");
 								return false;
 							}
@@ -237,105 +322,108 @@
 				
 				function move(mark) {
 					oMark = (mark === "X") ? "O" : "X";
-					// First see if there's a winning move
+					// First see if there's a winning move to make
 					// Then see if there's an opposing win to block
 					// Then see what move has the most winning possibilities
 					// Return the place to mark
 				}
+				
 				// Give player ability to choose "X" or "O"
+				// Make call external so can reapply it
+				function chooseMark(e, pMark) {
+					if (e.type === "click" || (e.type === "keypress" 
+								&& (e.which === 13 || e.which === 32))) {
+						cMark = (pMark === "X") ? "O" : "X";
+						$("#chosen span.mark").html(pMark);
+						$("#choice").fadeOut(250, function() {
+							$("#chosen").fadeIn(250, function() {
+								// Make board's squares clickable
+								$("#board table tr td")
+									.attr({
+										role: "button",
+										tabindex: function(i){ return i + 1},
+										id: function(i){ return i + 1 }
+									})
+									.on("click keypress", function(e) {
+										if (e.type === "click" || (e.type === "keypress" 
+												&& (e.which === 13 || e.which === 32) && $(this).text() === "")) {
+											place = $(this).prop("tabindex");
+											// Add player's mark to the visible board
+											$(this).text(pMark);
+											// Change the board array
+											if (typeof(board[place - 1]) === "undefined") {
+												board[place - 1] = pMark;
+											} else {
+												// Something has gone very wrong
+												// Alert the player
+											}
+											// Test and change wins for win or finished
+											if (score(pMark, place, true)) {
+												// Calculate best move
+												// Add computer's mark
+												// Test for win
+												// If no win, see if board is full
+												// If it is, end the game
+											} else {
+												// See if board is full
+												// If it is, end the game
+											}
+											// Remove events
+											$(this).off("click");
+										} else if (e.type === "keypress") {
+											// NOTE: which registered 0 for all arrow keys
+											// Need to use keyCode for all of them
+											if (e.keyCode === 37) {
+												// If press left arrow
+												// See if it's in the left most column
+												if (wins[3].indexOf($(this).prop("tabindex")) === -1) {
+													// If not, change focus to cell - 1	 
+													$("#board table tr td").eq($(this).prop("tabindex") - 2).focus();
+												}
+											} else if (e.keyCode === 38) {
+												// If press up arrow
+												// See if it's in the top row
+												if (wins[0].indexOf($(this).prop("tabindex")) === -1) {
+													// If not, change focus to cell - 3
+													$("#board table tr td").eq($(this).prop("tabindex") - 4).focus();
+												}
+											} else if (e.keyCode === 39) {
+												// if press right arrow
+												// See if we're in the right-most column
+												if (wins[5].indexOf($(this).prop("tabindex")) === -1) {
+													// If not, change focus to cell + 1
+													$("#board table td").eq($(this).prop("tabindex")).focus();
+												}
+											} else if (e.keyCode === 40) {
+												// If press down arrow
+												// See if we're in the bottom column
+												if (wins[2].indexOf($(this).prop("tabindex")) === -1) {
+													// If not, change focus to cell + 3
+													$("#board table td").eq($(this).prop("tabindex") + 2).focus();
+												}
+											} else if (!isNaN(String.fromCharCode(e.which))) {
+												// The numbers are all keyCode 0
+												// Need to use which for them
+												var num = String.fromCharCode(e.which);
+												if (num == 0) {
+													num = 1;
+												}
+												$("#board table td").eq(num -1).focus();
+												// Move the focus to cell number 
+											}
+										}
+									});
+							});
+						});
+					}
+				}
 				$("#choice span.mark")
 					.attr({
 						role: "button",
 						tabindex: function(i){ return i + 1}})
-					.on("click keypress", function(e) {
-						if (e.type === "click" || (e.type === "keypress" 
-									&& (e.which === 13 || e.which === 32))) {
-							pMark = $(this).text();
-							cMark = (pMark === "X") ? "O" : "X";
-							$("#chosen span.mark").html(pMark);
-							$("#choice").fadeOut(250, function() {
-								$("#chosen").fadeIn(250, function() {
-									// Make board's squares clickable
-									$("#board table tr td")
-										.attr({
-											role: "button",
-											tabindex: function(i){ return i + 1},
-											id: function(i){ return i + 1 }
-										})
-										.on("click keypress", function(e) {
-											if (e.type === "click" || (e.type === "keypress" 
-													&& (e.which === 13 || e.which === 32) && $(this).text() === "")) {
-												place = $(this).prop("tabindex");
-												// Add player's mark to the visible board
-												$(this).text(pMark);
-												// Change the board array
-												if (typeof(board[place - 1]) === "undefined") {
-													board[place - 1] = pMark;
-												} else {
-													// Something has gone very wrong
-													// Alert the player
-												}
-												// Test and change wins for win or finished
-												if (score(pMark, place)) {
-													// Calculate best move
-													// Add computer's mark
-													// Test for win
-												} else {
-													
-													// Highlight winning strip
-													// Make reset button visible
-													// Add functionality to reset button
-												}
-												// Remove events
-												$(this).off("click");
-											} else if (e.type === "keypress") {
-												// NOTE: which registered 0 for all arrow keys
-												// Need to use keyCode for all of them
-												if (e.keyCode === 37) {
-													// If press left arrow
-													// See if it's in the left most column
-													if (wins[3].indexOf($(this).prop("tabindex")) === -1) {
-														// If not, change focus to cell - 1	 
-														$("#board table tr td").eq($(this).prop("tabindex") - 2).focus();
-													}
-												} else if (e.keyCode === 38) {
-													// If press up arrow
-													// See if it's in the top row
-													if (wins[0].indexOf($(this).prop("tabindex")) === -1) {
-														// If not, change focus to cell - 3
-														$("#board table tr td").eq($(this).prop("tabindex") - 4).focus();
-													}
-												} else if (e.keyCode === 39) {
-													// if press right arrow
-													// See if we're in the right-most column
-													if (wins[5].indexOf($(this).prop("tabindex")) === -1) {
-														// If not, change focus to cell + 1
-														$("#board table td").eq($(this).prop("tabindex")).focus();
-													}
-												} else if (e.keyCode === 40) {
-													// If press down arrow
-													// See if we're in the bottom column
-													if (wins[2].indexOf($(this).prop("tabindex")) === -1) {
-														// If not, change focus to cell + 3
-														$("#board table td").eq($(this).prop("tabindex") + 2).focus();
-													}
-												} else if (!isNaN(String.fromCharCode(e.which))) {
-													// The numbers are all keyCode 0
-													// Need to use which for them
-													var num = String.fromCharCode(e.which);
-													if (num == 0) {
-														num = 1;
-													}
-													$("#board table td").eq(num -1).focus();
-													// Move the focus to cell number 
-												}
-											}
-										});
-								});
-							});
-						}
-					});
-				}(jQuery));
+					.on("click keypress", function(e) { chooseMark(e, $(e.target).text()); });
+					
+			}(jQuery));
 		</script>
 	</body>
 
