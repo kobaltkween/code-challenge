@@ -259,7 +259,6 @@
 								.css("background-color", col).text(mess);
 					$("#board table").after(message);
 					$("#board .message").show();
-					console.log("Message should say " + $("#board .message").text());
 					// Make the board inactive
 					$blocks
 						.off("click keypress")
@@ -295,7 +294,7 @@
 				function noWin() {
 					console.log("No one won.");
 					var mess = "This game was draw.  Good game!";
-					endGame(message, "grey");
+					endGame(mess, "grey");
 				}
 				
 				// Function returns false if new mark won game
@@ -322,6 +321,9 @@
 								console.log("That's a win!");
 								return false;
 							}
+							if (markCount.length === 2) {
+								
+							}
 						}
 					}
 					// No win yet; keep playing
@@ -331,16 +333,66 @@
 				
 				function move(spaces, mark) {
 					oMark = (mark === "X") ? "O" : "X";
-					// First see if there's a winning move to make
-					// Then see if there's an opposing win to block
-					// Then see what move has the most winning possibilities
-					// Return the place to mark
-					// First trying to return random place, to make sure flow works
-					// Take space off the board
-					var m = spaces[Math.floor(Math.random() * spaces.length)];
-					board[m - 1] = mark;
-					console.log("Computer should move to " + m);
-					return m;
+					
+					var cwin;
+					var owin;
+					var space;
+					var owins = [];
+					winloop: for (i = 0; i < wins.length; i++) {
+						if (wins[i] !== null) {
+							markCount = omarkCount = 0;
+							blockloop: for (j = 0; j < wins[i].length; j++) {
+								if (board[wins[i][j] - 1] === undefined) {
+									space = wins[i][j];
+								}
+								if (board[wins[i][j] - 1] === mark) {
+									// First see if there's a winning move to make
+									markCount++;
+									if (markCount === 2) {
+										cwin = wins[i];
+										if (space === undefined) {
+											space = wins[i][2];
+										}
+										break winloop;
+									}
+								} else if (board[wins[i][j] - 1] === oMark) {
+									// Then see if there's an opposing win to block
+									omarkCount++;
+									if (omarkCount === 2) {
+										console.log("Found move to block");
+										owin = wins[i];
+										if (space === undefined) {
+											space = wins[i][2];
+										}
+										break winloop;
+									}
+									// Need to see if there's a space n such that it's in win a and win b 
+									// Where both win a and win b have opposing marks
+								}
+							}
+							
+							space = undefined;
+						}
+					}
+					if (cwin !== undefined || owin !== undefined) {
+						return space;
+					} else {
+						mostWins = 0;
+						for (i = 0; i < spaces.length; i++) {
+							winCount = 0;
+							for (j = 0; j < wins.length; j++) {
+								if (wins[j] !== null && wins[j].indexOf(spaces[i]) !== -1) {
+									winCount++;
+								}
+							}
+							if (winCount > mostWins) {
+								mostWins = winCount;
+								space = spaces[i];
+								console.log("Space " + space + " has " + mostWins + " possible wins.");
+							}
+						}
+						return space
+					}
 				}
 				
 				function turnOnBlocks(pMark){
@@ -358,7 +410,7 @@
 								// Add player's mark to the visible board
 								$(this).text(pMark);
 								// Change the board array
-								if (typeof(board[place - 1]) === "undefined") {
+								if (board[place - 1] === undefined) {
 									board[place - 1] = pMark;
 								} else {
 									// Something has gone very wrong
@@ -372,8 +424,15 @@
 									if (spaces.length > 0) {
 										// Calculate best move
 										cPlace = move(spaces, cMark);
-										// Add computer's mark to the board
+										// Add computer's mark to the visible board
 										$blocks.eq(cPlace - 1).text(cMark);
+										// Change the board array
+										if (board[cPlace - 1] === undefined) {
+											board[cPlace - 1] = cMark;
+										} else {
+											// Something has gone very wrong
+											console.log("Game tried to put computer mark where there was already a mark.");
+										}
 										// Test for winning move
 										if (score(cMark, cPlace, false)) {
 											// If no win, see if board is full after computer's move

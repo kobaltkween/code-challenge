@@ -39,11 +39,45 @@
 			//console.log(testArray);
 			testArray2 = [];
 			console.log(testArray2.length);
+			// Making sure that pointers go to values, not each other
 			var i = j = 0;
 			i++;
+			
 			//console.log("i is " + i + " and j is " + j);
-			var test = (testArray.indexOf(22) !== -1) ? "found it" : "didn't find it";
-			console.log(test);
+			//var test = (testArray.indexOf(22) !== -1) ? "found it" : "didn't find it";
+			//console.log(test);  // Interestingly, returns <p id="test"> when the above line is commented out
+			function argTest(foo, bar) {
+				foo = foo || false;
+				if (foo) {
+					console.log("Foo is " + foo);
+				} 
+				if (bar !== undefined) {
+					console.log("Bar is " + bar + ".");
+				} else {
+					console.log("Bar is undefined.");
+				}
+				if (!foo && !bar) {
+					console.log("No arguments given.");
+				}
+			}
+			//argTest();
+			//argTest("late");
+			//argTest("woohoo!", 0);
+			
+			// See if can search for undefined
+			console.log(testArray.indexOf(undefined));  // Fails to find the undefined indices
+			
+			// Test what goes on with nested for loops and breaks
+			for (i = 0; i < 7; i++) {
+				for (j = 0; j < 3; j++) {
+					console.log("i is " + i);
+					console.log("j is " + j);
+					if (j == 1) {
+						break;
+					}
+				}
+			}
+			
 			(function($) {
 				$("p#test").on("click", function() {
 					$(this).css({
