@@ -337,7 +337,9 @@
 					var cwin;
 					var owin;
 					var space;
+					// Find wins with one mark
 					var owins = [];
+					var cwins = [];
 					winloop: for (i = 0; i < wins.length; i++) {
 						if (wins[i] !== null) {
 							markCount = omarkCount = 0;
@@ -365,32 +367,56 @@
 											space = wins[i][2];
 										}
 										break winloop;
+									} else if (omarkCount === 1) {
+										owins.push(wins[i]);
+									} else if (cmarkCount === 1) {
+										cwins.push(wins[i]);
 									}
-									// Need to see if there's a space n such that it's in win a and win b 
-									// Where both win a and win b have opposing marks
 								}
 							}
-							
 							space = undefined;
 						}
 					}
 					if (cwin !== undefined || owin !== undefined) {
 						return space;
 					} else {
+						// Need to see if there's a space n such that it's in win a and win b 
+						// Where both win a and win b have opposing marks
 						mostWins = 0;
+						var dspace;
 						for (i = 0; i < spaces.length; i++) {
 							winCount = 0;
+							oWinsCount = 0;
+							cWinsCount = 0;
 							for (j = 0; j < wins.length; j++) {
 								if (wins[j] !== null && wins[j].indexOf(spaces[i]) !== -1) {
 									winCount++;
+									if (owins.length > 1 && j < owins.length && owins[j].indexOf(spaces[i]) !== -1) {
+										oWinsCount++;
+										if (oWinsCount == 2) {
+											// Block a player double win
+											// Definitely take this space
+											return spaces[i];
+										}
+									}
+									if (cwins.length < 1 && j < cwins.length && cwins[j].indexOf(spaces[i]) !== -1) {
+										cWinsCount++;
+										if (cWinsCount === 2) {
+											// Make a computer doubler win
+											// Don't want to return value, in case a later space is a double win for the player 
+											dspace = spaces[i];
+										}
+									}
 								}
 							}
 							if (winCount > mostWins) {
+								// Or just go with the most winning possibilities
 								mostWins = winCount;
 								space = spaces[i];
 								console.log("Space " + space + " has " + mostWins + " possible wins.");
 							}
 						}
+						space = (dspace) ? dspace : space;
 						return space
 					}
 				}

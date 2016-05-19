@@ -77,7 +77,13 @@
 					}
 				}
 			}
-			
+			// Testing if a variable just isn't declared, if it can be tested as undefined
+			// Result: Error, not defined
+			if (gaga === undefined) {
+				console.log("Gaga fits in no box!");
+			} else	{
+				console.log("Can't find gaga!");
+			}
 			(function($) {
 				$("p#test").on("click", function() {
 					$(this).css({
