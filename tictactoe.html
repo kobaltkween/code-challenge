@@ -212,11 +212,18 @@
 				
 				var cols = {col1: [1, 4, 7], col2: [2, 5, 8], col3: [3, 6, 9]};
 				
+				// Make choice buttons navigable and functional
+				$("#choice span.mark")
+					.attr({
+						role: "button",
+						tabindex: function(i){ return i + 1}})
+					.on("click keypress", function(e) { chooseMark(e, $(e.target).text()); });
+				
 				// Set up reset button
 				// Give the reset button the ability to reset the game
 				$("a#reset").on("click keypress", function(e) {
 					if (e.type === "click" || (e.type === "keypress" 
-								&& (e.which === 13 || e.which === 32))) {
+								&& e.which === 13)) {
 						initBoard();
 					}	
 				});
@@ -246,6 +253,107 @@
 					// Empty out board cells
 					$blocks.text("");
 				}
+				
+				// Give player ability to choose "X" or "O"
+				function chooseMark(e, pMark) {
+					if (e.type === "click" || (e.type === "keypress" && e.which === 13)) {
+						cMark = (pMark === "X") ? "O" : "X";
+						$("#chosen span.mark").html(pMark);
+						$("#choice").fadeOut(250, function() {
+							$("#chosen").fadeIn(250, function() {
+								// Made this into a function for better readability
+								turnOnBlocks(pMark);
+							});
+						});
+					}
+				}
+				
+				// Make board's squares clickable
+				function turnOnBlocks(pMark){
+					$blocks
+						.attr({
+							role: "button",
+							tabindex: function(i){ return i + 1},
+							id: function(i){ return i + 1 }
+						})
+						.on("click keypress", function(e) {
+							if ((e.type === "click" || (e.type === "keypress" && e.which === 13)) && $(this).text() === "") {
+								place = $(this).prop("tabindex");
+								// Add player's mark to the visible board
+								$(this).text(pMark);
+								// Change the board array
+								if (board[place - 1] === undefined) {
+									board[place - 1] = pMark;
+								} else {
+									// Something has gone very wrong
+									console.log("Board isn't blocking squares already chosen.");
+								}
+								// Test and change wins for win or finished
+								if (score(pMark, place, true)) {
+									// See where can move
+									spaces = findSpaces();
+									if (spaces.length > 0) {
+										// Calculate best move
+										cPlace = move(spaces, cMark);
+										// Add computer's mark to the visible board
+										$blocks.eq(cPlace - 1).text(cMark);
+										// Change the board array
+										if (board[cPlace - 1] === undefined) {
+											board[cPlace - 1] = cMark;
+										}
+										// See if the computer made a winning move
+										if (score(cMark, cPlace, false)) {
+											// If no win, see if board is full after computer's move
+											spaces = findSpaces();
+											if (spaces.length === 0) {
+												// If it is, end the game
+												noWin();
+											}
+										} 	
+									} else {
+										// End of the game
+										noWin();
+									}
+								}
+								// Remove click event
+								$(this).off("click");
+							} else if (e.type === "keypress") {
+								// NOTE: e.which registered 0 for all arrow keys
+								// Need to use e.keyCode for all of them
+								// If press left arrow
+								// See if it's not in the left most column
+								if (e.keyCode === 37 && cols.col1.indexOf($(this).prop("tabindex")) === -1) {
+										// If not, change focus to cell - 1	 
+										$blocks.eq($(this).prop("tabindex") - 2).focus();
+								} else if (e.keyCode === 38 && $(this).parent().attr("id") !== "row1") {
+									// If press up arrow
+									// See if it's not in the top row
+									// If not, change focus to cell - 3
+									$blocks.eq($(this).prop("tabindex") - 4).focus();
+								} else if (e.keyCode === 39 && cols.col3.indexOf($(this).prop("tabindex")) === -1) {
+									// If press right arrow
+									// See if we're in the right-most column
+									// If not, change focus to cell + 1
+									$blocks.eq($(this).prop("tabindex")).focus();
+								} else if (e.keyCode === 40 && $(this).parent().attr("id") !== "row3") {
+									// If press down arrow
+									// See if we're in the bottom column
+									// If not, change focus to cell + 3
+									$blocks.eq($(this).prop("tabindex") + 2).focus();
+								} else if (!isNaN(String.fromCharCode(e.which))) {
+									// The numbers are all keyCode 0
+									// Need to use which for them
+									var num = String.fromCharCode(e.which);
+									if (num == 0) {
+										num = 1;
+									}
+									// Move the focus to cell number 
+									$blocks.eq(num -1).focus();
+								}
+							}
+						});		
+				}
+				
 				
 				// Make a game over interface
 				function endGame(mess, col) {
@@ -338,7 +446,6 @@
 				
 				function move(spaces, mark) {
 					oMark = (mark === "X") ? "O" : "X";
-					
 					var cwin;
 					var owin;
 					var space;
@@ -366,7 +473,7 @@
 									// Then see if there's an opposing win to block
 									omarkCount++;
 									if (omarkCount === 2) {
-										console.log("Found move to block");
+										//console.log("Found move to block");
 										owin = wins[i];
 										if (space === undefined) {
 											space = wins[i][2];
@@ -393,24 +500,26 @@
 							winCount = 0;
 							oWinsCount = 0;
 							cWinsCount = 0;
-							for (j = 0; j < wins.length; j++) {
+							for (j = 0; j < wins.length; j++) {		
 								if (wins[j] !== null && wins[j].indexOf(spaces[i]) !== -1) {
 									winCount++;
-									if (owins.length > 1 && j < owins.length && owins[j].indexOf(spaces[i]) !== -1) {
-										oWinsCount++;
-										if (oWinsCount == 2) {
-											// Block a player double win
-											// Definitely take this space
-											return spaces[i];
-										}
+								}
+								if (owins.length > 1 && j < owins.length && owins[j].indexOf(spaces[i]) !== -1) {
+									console.log("Space " + spaces[i] + " found in " + owins[j]);
+									oWinsCount++;
+									if (oWinsCount == 2) {
+										console.log("Found double win.");
+										// Block a player double win
+										// Definitely take this space
+										return spaces[i];
 									}
-									if (cwins.length < 1 && j < cwins.length && cwins[j].indexOf(spaces[i]) !== -1) {
-										cWinsCount++;
-										if (cWinsCount === 2) {
-											// Make a computer doubler win
-											// Don't want to return value, in case a later space is a double win for the player 
-											dspace = spaces[i];
-										}
+								}
+								if (cwins.length < 1 && j < cwins.length && cwins[j].indexOf(spaces[i]) !== -1) {
+									cWinsCount++;
+									if (cWinsCount === 2) {
+										// Make a computer doubler win
+										// Don't want to return value, in case a later space is a double win for the player 
+										dspace = spaces[i];
 									}
 								}
 							}
@@ -418,128 +527,15 @@
 								// Or just go with the most winning possibilities
 								mostWins = winCount;
 								space = spaces[i];
-								console.log("Space " + space + " has " + mostWins + " possible wins.");
+								//console.log("Space " + space + " has " + mostWins + " possible wins.");
 							}
 						}
 						space = (dspace) ? dspace : space;
 						return space
 					}
 				}
-				
-				function turnOnBlocks(pMark){
-					// Make board's squares clickable
-					$blocks
-						.attr({
-							role: "button",
-							tabindex: function(i){ return i + 1},
-							id: function(i){ return i + 1 }
-						})
-						.on("click keypress", function(e) {
-							if (e.type === "click" || (e.type === "keypress" 
-									&& (e.which === 13 || e.which === 32) && $(this).text() === "")) {
-								place = $(this).prop("tabindex");
-								// Add player's mark to the visible board
-								$(this).text(pMark);
-								// Change the board array
-								if (board[place - 1] === undefined) {
-									board[place - 1] = pMark;
-								} else {
-									// Something has gone very wrong
-									// Alert the player
-									console.log("Board isn't blocking squares already chosen.");
-								}
-								// Test and change wins for win or finished
-								if (score(pMark, place, true)) {
-									// See where can move
-									spaces = findSpaces();
-									if (spaces.length > 0) {
-										// Calculate best move
-										cPlace = move(spaces, cMark);
-										// Add computer's mark to the visible board
-										$blocks.eq(cPlace - 1).text(cMark);
-										// Change the board array
-										if (board[cPlace - 1] === undefined) {
-											board[cPlace - 1] = cMark;
-										} else {
-											// Something has gone very wrong
-											console.log("Game tried to put computer mark where there was already a mark.");
-										}
-										// Test for winning move
-										if (score(cMark, cPlace, false)) {
-											// If no win, see if board is full after computer's move
-											spaces = findSpaces();
-											if (spaces.length === 0) {
-												// If it is, end the game
-												noWin();
-											}
-										} 	
-									} else {
-										// End of the game
-										noWin();
-									}
-								}
-								// Remove events
-								$(this).off("click");
-							} else if (e.type === "keypress") {
-								// NOTE: e.which registered 0 for all arrow keys
-								// Need to use e.keyCode for all of them
-								// If press left arrow
-								// See if it's not in the left most column
-								if (e.keyCode === 37 && cols.col1.indexOf($(this).prop("tabindex")) === -1) {
-										// If not, change focus to cell - 1	 
-										$blocks.eq($(this).prop("tabindex") - 2).focus();
-								} else if (e.keyCode === 38 && $(this).parent().attr("id") !== "row1") {
-									// If press up arrow
-									// See if it's not in the top row
-									// If not, change focus to cell - 3
-									$blocks.eq($(this).prop("tabindex") - 4).focus();
-								} else if (e.keyCode === 39 && cols.col3.indexOf($(this).prop("tabindex")) === -1) {
-									// If press right arrow
-									// See if we're in the right-most column
-									// If not, change focus to cell + 1
-									$blocks.eq($(this).prop("tabindex")).focus();
-								} else if (e.keyCode === 40 && $(this).parent().attr("id") !== "row3") {
-									// If press down arrow
-									// See if we're in the bottom column
-									// If not, change focus to cell + 3
-									$blocks.eq($(this).prop("tabindex") + 2).focus();
-								} else if (!isNaN(String.fromCharCode(e.which))) {
-									// The numbers are all keyCode 0
-									// Need to use which for them
-									var num = String.fromCharCode(e.which);
-									if (num == 0) {
-										num = 1;
-									}
-									// Move the focus to cell number 
-									$blocks.eq(num -1).focus();
-								}
-							}
-					});
-				}
-				
-				// Give player ability to choose "X" or "O"
-				// Make call external
-				function chooseMark(e, pMark) {
-					if (e.type === "click" || (e.type === "keypress" 
-								&& (e.which === 13 || e.which === 32))) {
-						cMark = (pMark === "X") ? "O" : "X";
-						$("#chosen span.mark").html(pMark);
-						$("#choice").fadeOut(250, function() {
-							$("#chosen").fadeIn(250, function() {
-								// Made this into a function for better readability
-								turnOnBlocks(pMark);
-							});
-						});
-					}
-				}
-				
-				$("#choice span.mark")
-					.attr({
-						role: "button",
-						tabindex: function(i){ return i + 1}})
-					.on("click keypress", function(e) { chooseMark(e, $(e.target).text()); });
-					
-			}(jQuery));
+			}
+			(jQuery));
 		</script>
 	</body>
 
