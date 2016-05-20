@@ -210,9 +210,20 @@
 				
 				var $blocks = $("#board table td");
 				
-				// Make a function to initialize game once it's over
+				var cols = {col1: [1, 4, 7], col2: [2, 5, 8], col3: [3, 6, 9]};
+				
+				// Set up reset button
+				// Give the reset button the ability to reset the game
+				$("a#reset").on("click keypress", function(e) {
+					if (e.type === "click" || (e.type === "keypress" 
+								&& (e.which === 13 || e.which === 32))) {
+						initBoard();
+					}	
+				});
+				
+				// Initialize interface after a game
 				function initBoard() {
-					console.log("Initialize the board.");
+					//console.log("Initialize the board.");
 					// Re-initializes values
 					pMark = cMark = "";
 					wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
@@ -236,24 +247,7 @@
 					$blocks.text("");
 				}
 				
-				// Set up reset button
-				// Give the reset button the ability to reset the game
-				$("a#reset").on("click keypress", function(e) {
-					if (e.type === "click" || (e.type === "keypress" 
-								&& (e.which === 13 || e.which === 32))) {
-						initBoard();
-					}	
-				});
-				function findSpaces() {
-					spaces = [];
-					for (i = 0; i < board.length; i++) {
-						if (typeof(board[i]) === "undefined") {
-							spaces.push(i + 1);
-						}
-					}
-					return spaces;
-				}
-				
+				// Make a game over interface
 				function endGame(mess, col) {
 					var message = $("<p />", {"class" : "message"})
 								.css("background-color", col).text(mess);
@@ -272,6 +266,17 @@
 							role: "button",
 							tabindex: 1
 						}).focus();
+				}
+				
+				// Find spaces in the board array
+				function findSpaces() {
+					spaces = [];
+					for (i = 0; i < board.length; i++) {
+						if (board[i] === undefined) {
+							spaces.push(i + 1);
+						}
+					}
+					return spaces;
 				}
 				
 				function win(marked, player) {
@@ -476,36 +481,28 @@
 								// Remove events
 								$(this).off("click");
 							} else if (e.type === "keypress") {
-								// NOTE: which registered 0 for all arrow keys
-								// Need to use keyCode for all of them
-								if (e.keyCode === 37) {
-									// If press left arrow
-									// See if it's in the left most column
-									if (wins[3].indexOf($(this).prop("tabindex")) === -1) {
+								// NOTE: e.which registered 0 for all arrow keys
+								// Need to use e.keyCode for all of them
+								// If press left arrow
+								// See if it's not in the left most column
+								if (e.keyCode === 37 && cols.col1.indexOf($(this).prop("tabindex")) === -1) {
 										// If not, change focus to cell - 1	 
 										$blocks.eq($(this).prop("tabindex") - 2).focus();
-									}
-								} else if (e.keyCode === 38) {
+								} else if (e.keyCode === 38 && $(this).parent().attr("id") !== "row1") {
 									// If press up arrow
-									// See if it's in the top row
-									if (wins[0].indexOf($(this).prop("tabindex")) === -1) {
-										// If not, change focus to cell - 3
-										$blocks.eq($(this).prop("tabindex") - 4).focus();
-									}
-								} else if (e.keyCode === 39) {
-									// if press right arrow
+									// See if it's not in the top row
+									// If not, change focus to cell - 3
+									$blocks.eq($(this).prop("tabindex") - 4).focus();
+								} else if (e.keyCode === 39 && cols.col3.indexOf($(this).prop("tabindex")) === -1) {
+									// If press right arrow
 									// See if we're in the right-most column
-									if (wins[5].indexOf($(this).prop("tabindex")) === -1) {
-										// If not, change focus to cell + 1
-										$blocks.eq($(this).prop("tabindex")).focus();
-									}
-								} else if (e.keyCode === 40) {
+									// If not, change focus to cell + 1
+									$blocks.eq($(this).prop("tabindex")).focus();
+								} else if (e.keyCode === 40 && $(this).parent().attr("id") !== "row3") {
 									// If press down arrow
 									// See if we're in the bottom column
-									if (wins[2].indexOf($(this).prop("tabindex")) === -1) {
-										// If not, change focus to cell + 3
-										$blocks.eq($(this).prop("tabindex") + 2).focus();
-									}
+									// If not, change focus to cell + 3
+									$blocks.eq($(this).prop("tabindex") + 2).focus();
 								} else if (!isNaN(String.fromCharCode(e.which))) {
 									// The numbers are all keyCode 0
 									// Need to use which for them
