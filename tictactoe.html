@@ -93,6 +93,11 @@
 				border-right: 1px solid #444;
 				border-left: 1px solid #444;
 			}
+			#board .num {
+				color: #ccc;
+				font-size: 12px;
+				font-family: Lora, Georgia, Times, serif;
+			}
 			.mark {
 				font-size: 30px;
 				padding: 10px;
@@ -146,15 +151,12 @@
 			p#chosen {
 				display: none;
 			}
-			#board p.warning, #board p.message {
+			#board p.message {
 				font-size: 20px;
 				color: white;
 				padding: 10px;
 				border-radius: 10px;
 				margin-top: 30px;
-			}
-			#board p.warning {
-				background-color: orange;
 			}
 			footer {
 				clear: both;
@@ -173,7 +175,7 @@
 		</header>
 		<main>
 			<noscript>
-				<p class="warning">Sorry! This game won't work unless you turn on JavaScript.  
+				<p class="warning">Sorry! This game won't work unless you enable JavaScript.  
 				Please change your browser or plugin settings to allow this script to run.</p>
 			</noscript>
 			<div id="board">
@@ -190,10 +192,11 @@
 				<h2>Instructions</h2>
 				<ol>
 					<li>Click or tab and select "X" or "O".</li>
-					<li>Click or tab and select the empty square you want to use.</li>
-					<li>Play until you or the computer win.</li>
+					<li>Click or tab and select (press [ENTER]) on the empty square you want to use.  You can also use numbers 1 - 9 to navigate to the square you want.</li>
+					<li>Play until you win or the computer does.</li>
+					<li>If you want to play again, press Play Again, or press [ENTER].</li>
 				</ol>
-			</div>http://www.w3schools.com/cssref/pr_border-color.asp
+			</div>
 		</main>
 		<footer><p>Made with jQuery.</p></footer>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
@@ -207,10 +210,37 @@
 				var wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
 							[3,6,9], [1,5,9], [3,5,7]];
 				var board = Array(9);
+				// Variables for minmax calculations
+				var score = 0;
+				var numNodes = 0;
+				// Set up array of winning squares here for global access
+				var markCount;
 				
 				var $blocks = $("#board table td");
 				
+				// Columns are useful for  arrow navigation
 				var cols = {col1: [1, 4, 7], col2: [2, 5, 8], col3: [3, 6, 9]};
+				
+				// Add numbers to the squares 
+				numStartX = parseInt ($("#board table").position().left) + parseInt($("#board table").css("marginTop")) + 5;
+				numStartY = parseInt ($("#board table").position().top) + parseInt($("#board table").css("marginTop")) + 5;
+				
+				bHeight = bWidth = parseInt($blocks.height());
+				for (var i = 1; i <= 3; i++) {
+					for (var j = 0; j < 3; j++) {
+						num = i + j * 3;
+						x = numStartX + (i -1) * bWidth;
+						y = numStartY + j * bHeight;
+						number = $("<div />", {"class" : "num"})
+									.text(num)
+									.css({
+										position: "absolute", 
+										left: x,
+										top: y});
+										
+						$("#board").append(number);
+					}
+				}
 				
 				// Make choice buttons navigable and functional
 				$("#choice span.mark")
@@ -288,31 +318,30 @@
 									// Something has gone very wrong
 									console.log("Board isn't blocking squares already chosen.");
 								}
-								// Test and change wins for win or finished
-								if (score(pMark, place, true)) {
-									// See where can move
-									spaces = findSpaces();
-									if (spaces.length > 0) {
-										// Calculate best move
-										cPlace = move(spaces, cMark);
-										// Add computer's mark to the visible board
-										$blocks.eq(cPlace - 1).text(cMark);
-										// Change the board array
-										if (board[cPlace - 1] === undefined) {
-											board[cPlace - 1] = cMark;
+								// Test for win or finished, change possible wins
+								if (getScore(pMark, place, true)) {
+									// Calculate best move
+									cPlace = move(spaces, cMark);
+									// Add computer's mark to the visible board
+									$blocks.eq(cPlace - 1).text(cMark).off("click");
+									// Change the board array
+									if (board[cPlace - 1] === undefined) {
+										board[cPlace - 1] = cMark;
+									}
+									// See if the computer made a winning move or if game is over
+									if (!getScore(cMark, cPlace, false)) {
+										if (score === 0) {
+											noWin();
+										} else if (score === 1) {
+											win(markCount, false);
 										}
-										// See if the computer made a winning move
-										if (score(cMark, cPlace, false)) {
-											// If no win, see if board is full after computer's move
-											spaces = findSpaces();
-											if (spaces.length === 0) {
-												// If it is, end the game
-												noWin();
-											}
-										} 	
-									} else {
-										// End of the game
+									} 	
+									
+								} else {
+									if (score === 0) {
 										noWin();
+									} else if (score === -1) {
+										win(markCount, true);
 									}
 								}
 								// Remove click event
@@ -387,8 +416,9 @@
 					return spaces;
 				}
 				
+				// Set the interface to show a win when game ends
 				function win(marked, player) {
-					console.log("Win function called!");
+					// console.log("Win function called!");
 					// Set up response
 					var mess = (player) ? pWinMess : cWinMess;
 					// Mark the winning squares
@@ -404,20 +434,24 @@
 					}
 				}
 				
+				// Set the interface to show a draw when game ends
 				function noWin() {
-					console.log("No one won.");
+					// console.log("No one won.");
 					var mess = "This game was draw.  Good game!";
 					endGame(mess, "grey");
 				}
 				
-				// Function returns false if new mark won game
+
+				
+				// Function returns false if new mark won game or finished it
 				// True if it hasn't
-				function score(mark, place, player) {
+				// Adding minmax scoring, and checking spaces here
+				function getScore(mark, place, player) {
 					oMark = (mark === "X") ? "O" : "X";
 					for (i = 0; i < wins.length; i++) {
 						// Select only possible wins
 						if (wins[i] !== null && wins[i].indexOf(place) !== -1) {
-							// Start an array of places with marks
+							// Initialize array of squares with marks for win indication
 							markCount = [];
 							for (j = 0; j < wins[i].length; j++) {
 								if (board[wins[i][j] -1] === oMark) {
@@ -429,19 +463,19 @@
 								}
 							}
 							if (markCount.length === 3) {
-								// There's been a win; stop playing
-								win(markCount, player);
+								score = (player) ? -1 : 1;
 								console.log("That's a win!");
 								return false;
 							}
-							if (markCount.length === 2) {
-								
-							}
 						}
 					}
-					// No win yet; keep playing
-					console.log("No win yet.");
-					return true;
+					// Check to see if there are any moves left to make
+					if (findSpaces().length > 0) {
+						return true;
+					} else {
+						score = 0;
+						return false;
+					}
 				}
 				
 				function move(spaces, mark) {
@@ -508,7 +542,7 @@
 									console.log("Space " + spaces[i] + " found in " + owins[j]);
 									oWinsCount++;
 									if (oWinsCount == 2) {
-										console.log("Found double win.");
+										console.log("Found double win at " + spaces[i]);
 										// Block a player double win
 										// Definitely take this space
 										return spaces[i];

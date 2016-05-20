@@ -24,6 +24,7 @@
 
 	<body>
 	<p id="test">Testing testing testing!</p>
+	<table id="textTest"><tr><td><div>test</div></td></tr></table>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
 	<script>
 			// Test what's in an empty array
@@ -70,8 +71,8 @@
 			// Test what goes on with nested for loops and breaks
 			for (i = 0; i < 7; i++) {
 				for (j = 0; j < 3; j++) {
-					console.log("i is " + i);
-					console.log("j is " + j);
+					//console.log("i is " + i);
+					//console.log("j is " + j);
 					if (j == 1) {
 						break;
 					}
@@ -79,11 +80,12 @@
 			}
 			// Testing if a variable just isn't declared, if it can be tested as undefined
 			// Result: Error, not defined
-			if (gaga === undefined) {
+			/*if (gaga === undefined) {
 				console.log("Gaga fits in no box!");
 			} else	{
 				console.log("Can't find gaga!");
-			}
+			}*/
+			console.log($("#textTest tr td").text());
 			(function($) {
 				$("p#test").on("click", function() {
 					$(this).css({
