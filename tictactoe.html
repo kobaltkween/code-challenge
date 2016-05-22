@@ -206,20 +206,20 @@
 				var cWinMess = "Sorry, you lost.";
 				// Initialize player mark choice
 				var pMark = cMark = "";
-				
+				// Keeping the wins constant now
 				var wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
 							[3,6,9], [1,5,9], [3,5,7]];
 				var board = Array(9);
-				// Variables for minmax calculations
-				var score = 0;
-				var numNodes = 0;
-				// Set up array of winning squares here for global access
-				var markCount;
 				
 				var $blocks = $("#board table td");
 				
 				// Columns are useful for  arrow navigation
 				var cols = {col1: [1, 4, 7], col2: [2, 5, 8], col3: [3, 6, 9]};
+				// Markcount accessed by multiple functions
+				var markCount;
+				
+				// Creating loop variable so can make console calls for just the first loop	
+				var loop = 0;
 				
 				// Add numbers to the squares 
 				numStartX = parseInt ($("#board table").position().left) + parseInt($("#board table").css("marginTop")) + 5;
@@ -263,9 +263,9 @@
 					//console.log("Initialize the board.");
 					// Re-initializes values
 					pMark = cMark = "";
-					wins = [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], 
-							[3,6,9], [1,5,9], [3,5,7]];
 					board = Array(9);
+					score = 0;
+					numNodes = 0;
 					// Get rid of any messages or warnings
 					$("#board .warning, #board .message").remove();
 					// Hide reset and chosen
@@ -319,9 +319,11 @@
 									console.log("Board isn't blocking squares already chosen.");
 								}
 								// Test for win or finished, change possible wins
-								if (getScore(pMark, place, true)) {
+								pScore = getScore(pMark, board, true, false);
+								if (pScore[0]) {
+									console.log("Computer should make a move now");
 									// Calculate best move
-									cPlace = move(spaces, cMark);
+									cPlace = move(cMark, board, false)[1];
 									// Add computer's mark to the visible board
 									$blocks.eq(cPlace - 1).text(cMark).off("click");
 									// Change the board array
@@ -329,18 +331,19 @@
 										board[cPlace - 1] = cMark;
 									}
 									// See if the computer made a winning move or if game is over
-									if (!getScore(cMark, cPlace, false)) {
-										if (score === 0) {
+									var cScore = getScore(cMark, board, false, false);
+									if (!cScore[0]) {
+										if (cScore[1] === 0) {
 											noWin();
-										} else if (score === 1) {
+										} else if (cScore[1] === 1) {
 											win(markCount, false);
 										}
 									} 	
 									
 								} else {
-									if (score === 0) {
+									if (pScore[1] === 0) {
 										noWin();
-									} else if (score === -1) {
+									} else if (pScore[1] === -1) {
 										win(markCount, true);
 									}
 								}
@@ -446,40 +449,145 @@
 				// Function returns false if new mark won game or finished it
 				// True if it hasn't
 				// Adding minmax scoring, and checking spaces here
-				function getScore(mark, place, player) {
+				function getScore(mark, board, player) {
 					oMark = (mark === "X") ? "O" : "X";
 					for (i = 0; i < wins.length; i++) {
-						// Select only possible wins
-						if (wins[i] !== null && wins[i].indexOf(place) !== -1) {
-							// Initialize array of squares with marks for win indication
-							markCount = [];
-							for (j = 0; j < wins[i].length; j++) {
-								if (board[wins[i][j] -1] === oMark) {
-									wins[i] = null;
-									break;
-								} else if (board[wins[i][j] - 1] === mark) {
-									// Add to the tally of marks in a win
-									markCount.push(wins[i][j]);
-								}
+						// Initialize array of squares with marks for win indication
+						markCount = [];
+						for (j = 0; j < wins[i].length; j++) {
+							if (board[wins[i][j] - 1] === oMark) {
+								// Can't be a win, so get out of j loop
+								break;
+							} else if (board[wins[i][j] - 1] === mark) {
+								// Add to the tally of marks in a win
+								markCount.push(wins[i][j]);
 							}
-							if (markCount.length === 3) {
-								score = (player) ? -1 : 1;
-								console.log("That's a win!");
-								return false;
-							}
+						}
+						// If someone has won
+						if (markCount.length === 3) {
+							score = (player) ? -1 : 1;
+							return [false, score];
 						}
 					}
 					// Check to see if there are any moves left to make
-					if (findSpaces().length > 0) {
-						return true;
+					if (findSpaces(board).length > 0) {
+						return [true, undefined];
 					} else {
-						score = 0;
-						return false;
+						// Game finished in a tie - score 0
+						return [false, 0];
 					}
 				}
 				
-				function move(spaces, mark) {
+				// Making major changes to this function
+				// Found that it couldn't block a triple move
+				// More research found the minmax algorithm, so I'm applying that instead
+				// Player is a true/false value indicating whether the move for the player or computer
+				function move(mark, board, player, space) {
+					loop++;
+					// If spaces is not passed, make it the first free space
+					space = (space === undefined) ? findSpaces()[0] : space;
+					// Need mark, board, player 
 					oMark = (mark === "X") ? "O" : "X";
+					score = getScore(mark, board, player, true);
+					// Get the score and see if there's a winner
+					if (score[0]) {
+						// No winner, try the next space
+						var nextScore = null;
+						for(var i = 0; i < board.length; i++) {
+							// Find the spaces
+							if (board[i] === undefined) {
+								// See what happens if mark space
+								board[i] = mark;
+								var newScore = move(oMark, board, !player, space)[0];
+								if ((!player && (nextScore === null || newScore > nextScore)) 
+										|| (player && (nextScore === null || newScore < nextScore))) {
+									// Record the move
+									space = i + 1;
+									nextScore = newScore;
+								} 
+								// Reset the board value that was changed
+								board[i] = undefined;
+							}
+						}
+						return [nextScore, space];
+					} else {
+						switch(score[1]) {
+							case 1:
+								// Computer won the test
+								return [1, space];
+							case -1:
+								// Player won the test
+								return [-1, space];
+							case 0: 
+								// Tie was achieved
+								return [0, space];
+						}
+					}
+				}
+				/*function move(mark, board, player) {
+					oMark = (mark === "X") ? "O" : "X";
+					spaces = findSpaces(board);
+					
+					test
+					var cwin;
+					var owin;
+					var space;
+					// Find wins with one mark
+					var owins = [];
+					var cwins = [];
+					winloop: for (i = 0; i < wins.length; i++) {
+						if (wins[i] !== null) {
+							markCount = omarkCount = 0;
+							blockloop: for (j = 0; j < wins[i].length; j++) {
+								if (board[wins[i][j] - 1] === undefined) {
+									space = wins[i][j];
+								}
+								if (board[wins[i][j] - 1] === mark) {
+									// First see if there's a winning move to make
+									markCount++;
+									if (markCount === 2) {
+										cwin = wins[i];
+										if (space === undefined) {
+											space = wins[i][2];
+										}
+										break winloop;
+									}
+								} else if (board[wins[i][j] - 1] === oMark) {
+									// Then see if there's an opposing win to block
+									omarkCount++;
+									if (omarkCount === 2) {
+										//console.log("Found move to block");
+										owin = wins[i];
+										if (space === undefined) {
+											space = wins[i][2];
+										}
+										break winloop;
+									} else if (omarkCount === 1) {
+										owins.push(wins[i]);
+									} else if (cmarkCount === 1) {
+										cwins.push(wins[i]);
+									}
+								}
+							}
+							space = undefined;
+						}
+					}
+					if (cwin !== undefined || owin !== undefined) {
+						return space;
+					} else {
+						// Need to see if there's a space n such that it's in win a and win b 
+						// Where both win a and win b have opposing marks
+						mostWins = 0;
+						var dspace;
+						for (i = 0; i < spaces.length; i++) {
+							winCount = 0;
+							oWinsCount = 0;
+							cWinsCount = 0;
+							for (j = 0; j < wins.length; j++) {		
+								if (wins[j] !== null && wins[j].indexOf(spaces[i]) !== -1) {
+									winCount++;
+								}
+					test
 					var cwin;
 					var owin;
 					var space;
@@ -568,6 +676,36 @@
 						return space
 					}
 				}
+								if (owins.length > 1 && j < owins.length && owins[j].indexOf(spaces[i]) !== -1) {
+									console.log("Space " + spaces[i] + " found in " + owins[j]);
+									oWinsCount++;
+									if (oWinsCount == 2) {
+										console.log("Found double win at " + spaces[i]);
+										// Block a player double win
+										// Definitely take this space
+										return spaces[i];
+									}
+								}
+								if (cwins.length < 1 && j < cwins.length && cwins[j].indexOf(spaces[i]) !== -1) {
+									cWinsCount++;
+									if (cWinsCount === 2) {
+										// Make a computer doubler win
+										// Don't want to return value, in case a later space is a double win for the player 
+										dspace = spaces[i];
+									}
+								}
+							}
+							if (winCount > mostWins) {
+								// Or just go with the most winning possibilities
+								mostWins = winCount;
+								space = spaces[i];
+								//console.log("Space " + space + " has " + mostWins + " possible wins.");
+							}
+						}
+						space = (dspace) ? dspace : space;
+						return space
+					}
+				}*/
 			}
 			(jQuery));
 		</script>
