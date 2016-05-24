@@ -80,10 +80,11 @@
 			}
 			
 			var testArray2 = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-			var mapTest = testArray2.map(function(arr) { return arr.slice();});
+			var testArray3 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+			var mapTest = testArray3.map(function(arr) { return arr.slice();});
 			console.log(mapTest);
-			console.log(testArray2.slice());
-			if (mapTest == testArray2.slice()) {
+			console.log(testArray3.slice());
+			if (mapTest !== testArray2.slice()) {
 				console.log("Not the same, but the same value.");
 			}
 			// Testing if a variable just isn't declared, if it can be tested as undefined
