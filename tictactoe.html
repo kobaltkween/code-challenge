@@ -34,9 +34,9 @@
 				background-color: white;
 				color: black;
 				margin: 0 auto;
-				max-width: 840px;
+				max-width: 1100px;
 				min-width: 420px;
-				width: 75%;
+				width: 85%;
 				border-left: 1px solid #ddd;
 				border-right: 1px solid #ddd;
 				box-shadow:0 0 25px #ddd;
@@ -59,27 +59,45 @@
 				margin-bottom: 25px;
 				padding-top: 15px;
 			}
+			h2 {
+				color: #888;
+				font-style: italic;
+				font-size: 32px;
+				border-bottom: 1px solid #ccc;
+			}
 			table {
 				border-collapse: collapse;
 			}
 			#board, #instructions {
-				position: relative;
 				float: left;
 				margin: 1%;
 				padding: 1%;
-				width: 48%;
 				min-width: 380px;
 			}
-			#board table {
-				height: 300px;
-				width: 300px;
-				margin: 20px;
+			.wrapper {
+				position: relative;
+				margin: 0;
+				width: 100%;
+				padding: 1px;
+				/*border: 1px dotted red;*/
+			}
+			#board table, #numbers {
+				width: 320px;
+				height: 320px;
+				margin: 20px auto;
+			}
+			#numbers {
+				position: absolute;
+				top: 0;
+				left: 50%;
+				transform: translateX(-50%);
+				overflow: auto;
 			}
 			#board table td {
 				-webkit-transition: color 0.25s, background-color 0.25s;
 				transition: color 0.25s, background-color 0.25s;
-				height: 100px;
-				width: 100px;
+				height: 33.33%;
+				width: 33.33%;
 				text-align: center;
 				vertical-align: center;
 				font-size: 48px;
@@ -94,8 +112,8 @@
 				border-left: 1px solid #444;
 			}
 			#board .num {
-				color: #ccc;
-				font-size: 12px;
+				color: #bbb;
+				font-size: 14px;
 				font-family: Lora, Georgia, Times, serif;
 			}
 			.mark {
@@ -166,12 +184,24 @@
 				font-size: 0.85em;
 				font-style: italic;
 			}
+			@media screen and (min-width: 975px) {
+				#board, #instructions {
+					width: 48%;
+				}
+			}
+			@media screen and (max-width: 970px) {
+				#board, #instructions {
+					width: 96%;
+				}
+			}
+			
 		</style>
 	</head>
 
 	<body>
 		<header>
 			<h1>TicTacToe Coding Challenge</h1>
+			<meta name="viewport" content="width=device-width, initial-scale=1">
 		</header>
 		<main>
 			<noscript>
@@ -179,14 +209,18 @@
 				Please change your browser or plugin settings to allow this script to run.</p>
 			</noscript>
 			<div id="board">
+				<h2>Play</h2>
 				<p id="choice">Choose: <span class="mark">X</span> or <span class="mark">O</span></p>
 				<p id="chosen">You chose: <span class="mark">X</span> You get to make the first move.</p>
-				<table>
-					<tr id="row1"><td></td><td></td><td></td></tr>
-					<tr id="row2"><td></td><td></td><td></td></tr>
-					<tr id="row3"><td></td><td></td><td></td></tr>
-				</table>
-				<p class="right"><a id="reset">Play Again</a></p>
+				<div class="wrapper">
+					<div id="numbers"></div>
+					<table>
+						<tr id="row1"><td></td><td></td><td></td></tr>
+						<tr id="row2"><td></td><td></td><td></td></tr>
+						<tr id="row3"><td></td><td></td><td></td></tr>
+					</table>
+					<p class="right"><a id="reset">Play Again</a></p>
+				</div>
 			</div>
 			<div id="instructions">
 				<h2>Instructions</h2>
@@ -221,16 +255,17 @@
 				var maxDepth = 8;
 				// Creating loop variable so can make console calls for a limited number of loops
 				var loop = 0;
+				// The place where the bestMove function sets 
 				var choice;
 				// Add numbers to the squares 
-				numStartX = parseInt ($("#board table").position().left) + parseInt($("#board table").css("marginTop")) + 5;
-				numStartY = parseInt ($("#board table").position().top) + parseInt($("#board table").css("marginTop")) + 5;
+				numStartX = 6;
+				numStartY = 6;
 				
 				bHeight = bWidth = parseInt($blocks.height());
 				for (var i = 1; i <= 3; i++) {
 					for (var j = 0; j < 3; j++) {
 						num = i + j * 3;
-						x = numStartX + (i -1) * bWidth;
+						x = numStartX + (i - 1) * (bWidth + 4);
 						y = numStartY + j * bHeight;
 						number = $("<div />", {"class" : "num"})
 									.text(num)
@@ -239,7 +274,7 @@
 										left: x,
 										top: y});
 										
-						$("#board").append(number);
+						$("#numbers").append(number);
 					}
 				}
 				
@@ -324,18 +359,13 @@
 								pScore = getScore(pMark, board, true, false);
 								if (pScore[0]) {
 									// Calculate best move
-									minimax(cMark, board, false, 0, -Infinity, Infinity);
-									//nextBoard = recurseMinimax(cMark, board, false, 0)[1];
-									console.log("Next board: " + nextBoard);
-									console.log("Existing board: " + board);
-									cPlace = choice + 1;
-									console.log("Move suggested is " + cPlace);
-									
+									findBestMove(cMark, board, false, 0, -Infinity, +Infinity);
+									cPlace = choice;
 									// Add computer's mark to the visible board
-									$blocks.eq(cPlace - 1).text(cMark).off("click");
+									$blocks.eq(cPlace).text(cMark).off("click");
 									// Change the board array
-									if (board[cPlace - 1] === undefined) {
-										board[cPlace - 1] = cMark;
+									if (board[cPlace] === undefined) {
+										board[cPlace] = cMark;
 									}
 									// See if the computer made a winning move or if game is over
 									var cScore = getScore(cMark, board, false);
@@ -451,13 +481,72 @@
 					endGame(mess, "grey");
 				}
 				
-				function newMove(board1, board2) {
-					for (var i = 0; i < board1.length; i++) {
-						if (board1[i] !== board2[i]) {
-							return i + 1;
-						} 
+				// Function to generate a new board
+				function makeNewBoard(move, mark, board) {
+					board[move] = mark;
+					return board;
+				} 
+				
+				// Making major changes to this function
+				// Found that it couldn't block a triple move
+				// More research found the minmax algorithm, so I'm applying that instead
+				// I'm using one I studied with alpha pruning, which seems to be more efficient than others I tried at first
+				// Player is a true/false value indicating whether the move for the player or computer
+				function findBestMove(mark, board, player, depth, alpha, beta) {
+					// Look for a win 
+					var score = getScore(mark, board, player);
+					// If there's a win, incorporate the depth into the score
+					if (!score[0]) {
+						switch(score[1]) {
+							case 0:
+								return 0;
+							case -1: 
+								return depth - 10;
+							case 1:
+								return 10 - depth;
+						}
 					}
-					return 0;
+						
+					depth++;
+					var oMark = (mark === "X") ? "O" : "X";
+					var move, result, newBoard;
+					
+					for (var i = 0; i < board.length; i++) {
+						if (board[i] == undefined) {
+							move = i;
+							// Make a new board to test with the move filled in
+							// I tried just using .slice(), but it didn't work
+							newBoard = makeNewBoard(move, mark, board);
+							// See what the result is of passing in the new board
+							// with the opposing player's values
+							result = findBestMove(oMark, newBoard, !player, depth, alpha, beta);
+							board[i] = undefined;
+							if (!player) {
+								if (result > alpha) {
+									alpha = result;
+									if (depth == 1) {
+										choice = move;
+									}
+								} else if (alpha >= beta) {
+									return alpha;
+								}
+							} else {
+								if (result < beta) {
+									beta = result;
+									if (depth == 1) {
+										choice = move;
+									}
+								 } else if (beta <= alpha) {
+										return beta;
+								 }
+							}
+						}
+					}
+					if (!player) { 
+						return alpha;
+					} else {
+						return beta;
+					}
 				}
 				
 				// Function returns false if new mark won game or finished it
@@ -467,7 +556,7 @@
 				// array[0] = game still in play or not
 				// array[1] = score - computer win = 1, tie or none = 0, player win = -1
 				// Had significant problems with the scoring function that needed structured testing
-				function getScoreMine(mark, board, player) {
+				function getScore(mark, board, player) {
 					var oMark = (mark === "X") ? "O" : "X";
 					for (i = 0; i < wins.length; i++) {
 						// Initialize array of squares with marks for win indication
@@ -489,9 +578,9 @@
 								markCount.push(wins[i][j]);
 								if ((board[wins[i][j] - 1] === mark && !player)
 											|| (board[wins[i][j] -1] === oMark && player)) { 
-									win = 1;
+									var win = 1;
 								} else{
-									win = -1;
+									var win = -1;
 								}
 								// console.log("Win: " + win);
 							}
@@ -562,62 +651,7 @@
 				console.log("T5c: Playing: " + testScore[0] + ", Score: " + testScore[1]);
 				console.log("A5c: Playing: true, Score: 0");*/
 				
-				// Making major changes to this function
-				// Found that it couldn't block a triple move
-				// More research found the minmax algorithm, so I'm applying that instead
-				// Player is a true/false value indicating whether the move for the player or computer
-				function minimax(mark, board, player, depth, alpha, beta) {
-					var score = getScore(mark, board, player);
-					if (!score[0]) {
-						switch (score[1]) {
-							case 1:
-								return  10 - depth;
-							case 0:
-								return 0;
-							case -1:
-								return depth - 10;
-						}
-					}
-						
-					depth++;
-					
-					var availableMoves = findSpaces(board);
-					var move, result, possible_game;
-					var oMark = (mark === "X") ? "O" : "X";
-					if (!player) {
-						for (var i = 0; i < availableMoves.length; i++) {
-							move = availableMoves[i];
-							board[i] = mark;
-							result = minimax(oMark, board, !player, depth, alpha, beta);
-							possible_game = board.slice(0);
-							board[i] = undefined;
-							if (result > alpha) {
-								alpha = result;
-								if (depth == 1)
-									choice = move;
-							} else if (alpha >= beta) {
-								return alpha;
-							}
-						}
-						return alpha;
-					} else {
-						for (var i = 0; i < availableMoves.length; i++) {
-							move = availableMoves[i];
-							board[i] = mark;
-							result = minimax(oMark, board, !player, depth, alpha, beta);
-							possible_game = board.slice(0);
-							board[i] = undefined;
-							if (result < beta) {
-								beta = result;
-								if (depth == 1)
-									choice = move;
-							} else if (beta <= alpha) {
-								return beta;
-							}
-						}
-						return beta;
-					}
-				}
+				
 				
 			}
 			(jQuery));
